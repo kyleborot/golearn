@@ -1,1 +1,1 @@
-package redirect
+package handlers
