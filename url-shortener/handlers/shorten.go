@@ -73,6 +73,7 @@ func PostRequest(w http.ResponseWriter, r *http.Request) {
 	err = db.StoreShortenedURL(ctx, jsonResponse)
 	if err != nil {
 		http.Error(w, "Failed to store URL "+err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	w.WriteHeader(http.StatusOK)

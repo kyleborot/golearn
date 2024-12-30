@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "url-shortener-446004"
-  }
+    "default": "url-shortener-446004",
+    "url-shortener": "url-shortener-446004"
+  },
+  "targets": {},
+  "etags": {}
 }

@@ -20,10 +20,14 @@ func InitializeFirestore() (*firestore.Client, error) {
 	}
 
 	Client = client
+	log.Printf("Firestore Client: %+v", client)
 	return client, nil
 }
 func StoreShortenedURL(ctx context.Context, urlData models.UrlStruct) error {
 	collectionRef := Client.Collection("urls")
+	log.Printf("Document ID: %s", urlData.ID)
+	log.Printf("Document ID: %s", urlData.LongURL)
+	log.Printf("Document ID: %s", urlData.Timestamp)
 	_, err := collectionRef.Doc(urlData.ID).Set(ctx, map[string]interface{}{
 		"long_url":  urlData.LongURL,
 		"timestamp": urlData.Timestamp,
