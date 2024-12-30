@@ -11,7 +11,7 @@ const (
 	characterSet        = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 )
 
-func fromBase62(encoded string) (uint64, error) {
+func FromBase62(encoded string) (uint64, error) {
 	var val uint64
 	for index, char := range encoded {
 		pow := len(encoded) - (index + 1)
