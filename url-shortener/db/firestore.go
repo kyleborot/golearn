@@ -13,7 +13,8 @@ var Client *firestore.Client
 
 func InitializeFirestore() (*firestore.Client, error) {
 	ctx := context.Background()
-	client, err := firestore.NewClient(ctx, "url-shortener-446004", option.WithCredentialsFile("../serviceAccountKey.json"))
+	sakPath := "C:/Users/kborot/Desktop/golearn/url-shortener/serviceAccountKey.json"
+	client, err := firestore.NewClient(ctx, "url-shortener-446004", option.WithCredentialsFile(sakPath))
 	if err != nil {
 		log.Fatalf("Failed to create Firestore client: %v", err)
 	}

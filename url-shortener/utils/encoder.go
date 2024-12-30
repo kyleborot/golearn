@@ -1,8 +1,6 @@
 package utils
 
 import (
-	"errors"
-	"math"
 	"strings"
 )
 
@@ -11,16 +9,26 @@ const (
 	characterSet        = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 )
 
-func FromBase62(encoded string) (uint64, error) {
+func ToBase62(data []byte) string {
 	var val uint64
-	for index, char := range encoded {
-		pow := len(encoded) - (index + 1)
-		pos := strings.IndexRune(characterSet, char)
-		if pos == -1 {
-			return 0, errors.New("invalid character: " + string(char))
-		}
-
-		val += uint64(pos) * uint64(math.Pow(float64(base), float64(pow)))
+	for _, b := range data {
+		val = val*256 + uint64(b) // Convert each byte into the number space
 	}
-	return val, nil
+
+	var result strings.Builder
+	for val > 0 {
+		result.WriteByte(characterSet[val%base])
+		val /= base
+	}
+
+	return reverseString(result.String())
+}
+
+// Helper function to reverse a string
+func reverseString(s string) string {
+	runes := []rune(s)
+	for i, j := 0, len(runes)-1; i < j; i, j = i+1, j-1 {
+		runes[i], runes[j] = runes[j], runes[i]
+	}
+	return string(runes)
 }

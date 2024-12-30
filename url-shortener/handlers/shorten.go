@@ -1,12 +1,14 @@
 package handlers
 
 import (
-	"encoding/json"
+	"context"
+	"crypto/sha256"
 	"errors"
 	"net/http"
 	"net/url"
 	"time"
 
+	"github.com/kyleborot/golearn/url-shortener/db"
 	"github.com/kyleborot/golearn/url-shortener/models"
 	"github.com/kyleborot/golearn/url-shortener/utils"
 )
@@ -25,38 +27,54 @@ func validateUrl(longURL string) (bool, error) {
 	return true, nil
 }
 
-func createJSONPackage(longURL string) ([]byte, error) {
+func createJSONPackage(longURL string) (models.UrlStruct, error) {
 	isValid, err := validateUrl(longURL)
 	if !isValid || err != nil {
-		return nil, errors.New("invalid or inaccessible URL")
+		return models.UrlStruct{}, errors.New("invalid or inaccessible URL" + err.Error())
 	}
-	shortCode, err := utils.FromBase62(longURL)
-	if err != nil {
-		return nil, errors.New("could not encode URL")
-	}
+	hash := sha256.New()
+	hash.Write([]byte(longURL))
+	hashBytes := hash.Sum(nil)
+
+	shortCode := utils.ToBase62(hashBytes[:8])
+
 	urlEntry := models.UrlStruct{
-		ID:        string(rune(shortCode)),
+		ID:        shortCode,
 		LongURL:   longURL,
 		Timestamp: time.Now(),
 	}
-	jsonResponse, err := json.Marshal(urlEntry)
-	if err != nil {
-		return nil, errors.New("failed to encode JSON")
-	}
-	return jsonResponse, nil
+	return urlEntry, nil
 }
 
-func postRequest(w http.ResponseWriter, r *http.Request, longURL string) {
+func PostRequest(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	jsonResponse, err := createJSONPackage(longURL)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(`{"error": "Internal Server Error Occurred (failed JSONResponse)"}`))
+
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Error parsing form", http.StatusBadRequest)
 		return
 	}
+
+	longURL := r.FormValue("longURL")
+	if longURL == "" {
+		http.Error(w, "Missing longURL parameter", http.StatusBadRequest)
+		return
+	}
+
+	jsonResponse, err := createJSONPackage(longURL)
+	if err != nil {
+		http.Error(w, "Internal server error"+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	ctx := context.Background()
+	err = db.StoreShortenedURL(ctx, jsonResponse)
+	if err != nil {
+		http.Error(w, "Failed to store URL", http.StatusInternalServerError)
+	}
+
 	w.WriteHeader(http.StatusOK)
-	w.Write(jsonResponse)
+	w.Write([]byte(`{"message": "URL successfully shortened!"}`))
 }
