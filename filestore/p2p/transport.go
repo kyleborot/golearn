@@ -9,4 +9,5 @@ type Peer interface {
 //between the nodes in the network
 //form (TCP, UDP, websockets, etc.)
 type Transport interface {
+	ListenAndAccept() error
 }
